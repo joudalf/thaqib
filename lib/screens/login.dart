@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:thaqib/screens/signup.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 
@@ -197,7 +198,18 @@ class LoginScreen extends StatelessWidget {
 
 
       // Navigate to Home Page on successful login
-      Navigator.pushReplacementNamed(context, '/home');
+      final uid = userCredential.user?.uid;
+      if (uid != null) {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+        final role = userDoc.data()?['role'];
+
+        if (role == 'admin') {
+          Navigator.pushReplacementNamed(context, '/adminHome'); // صفحة الأدمن
+        } else {
+          Navigator.pushReplacementNamed(context, '/home'); // الصفحة العادية للمستخدم
+        }
+      }
+
     }  on FirebaseAuthException catch (e) {
       String errorMessage;
 

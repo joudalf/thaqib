@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -28,6 +30,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      final user = _auth.currentUser;
+      await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+        'name': _nameController.text.trim(),
+        'username': _usernameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'profileImage': '', // تحدث لاحقاً
+        'createdAt': Timestamp.now(),
+      });
+
 
       // Navigate to login screen if sign-up is successful
       Navigator.pushReplacementNamed(context, '/login');

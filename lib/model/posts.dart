@@ -9,7 +9,9 @@ class Post {
   final String username; // ✅ Add username
   final String userHandle; // ✅ Add user handle (@username)
   final DateTime timestamp; // ✅ Keep DateTime for correct Firestore conversion
-  final List<dynamic> replies; // ✅ Add replies as a list
+  final List<Map<String, dynamic>> replies;// ✅ Add replies as a list
+  final String userId;
+
 
   Post({
     required this.id,
@@ -21,10 +23,12 @@ class Post {
     required this.userHandle,
     required this.timestamp,
     required this.replies,
+    required this.userId
+
   });
 
   // ✅ Convert Firestore Document to Post object
-  factory Post.fromFirestore(Map<String, dynamic> data, String id) {
+  factory Post.fromFirestore(Map<String, dynamic> data, String id){
     return Post(
       id: id,
       title: data['title'] ?? '',
@@ -33,8 +37,24 @@ class Post {
       userProfileImage: data['userProfileImage'] ?? '', // ✅ Get user image
       username: data['username'] ?? 'مستخدم مجهول', // ✅ Get username
       userHandle: data['userHandle'] ?? '@unknown', // ✅ Get user handle (@)
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(), // ✅ Fix DateTime issue
-      replies: List<dynamic>.from(data['replies'] ?? []), // ✅ Ensure replies are a list
+      timestamp: (data['timestamp'] as Timestamp).toDate(), // ✅ Fix DateTime issue
+      replies: (data['replies'] as List?)?.map<Map<String, dynamic>>((reply) {
+        if (reply is Map<String, dynamic>) {
+          return reply;
+        } else {
+          return {
+            'text': reply.toString(),
+            'timestamp': Timestamp.now(),
+            'userId': '',
+            'username': 'مجهول',
+            'name': 'مجهول',
+            'userProfileImage': '',
+          };
+        }
+      }).toList() ?? [],
+      userId: data['userId'] ?? '',
+
+
     );
   }
 
@@ -47,7 +67,7 @@ class Post {
       'userProfileImage': userProfileImage, // ✅ Save user image
       'username': username, // ✅ Save username
       'userHandle': userHandle, // ✅ Save user handle (@)
-      'timestamp': FieldValue.serverTimestamp(), // ✅ Fix DateTime issue
+     'timestamp': Timestamp.fromDate(timestamp),// ✅ Fix DateTime issue
       'replies': replies, // ✅ Save replies
     };
   }

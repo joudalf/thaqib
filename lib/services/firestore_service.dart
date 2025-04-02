@@ -88,5 +88,28 @@ class FirestoreService {
   }
 
 
+  Future<void> addCategory(String title, String imageUrl) async {
+    await FirebaseFirestore.instance.collection('community_categories').add({
+      'name': title,
+      'imageUrl': imageUrl,
+    });
+  }
+
+
+  Future<void> deleteCategory(String categoryId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('community_categories')
+          .doc(categoryId)
+          .delete();
+      print("✅ Category deleted: $categoryId");
+    } catch (e) {
+      print("❌ Error deleting category: $e");
+      rethrow;
+    }
+  }
+
+
+
 
 }

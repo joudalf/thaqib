@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:thaqib/screens/login.dart';
 import 'package:thaqib/screens/signup.dart';
 import 'package:thaqib/screens/home.dart';
+import 'package:thaqib/admin_screens/admin_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
           '/home': (context) => HomeScreen(),
+    '/adminHome': (context) => AdminHomeScreen(),
         },
     );
   }
