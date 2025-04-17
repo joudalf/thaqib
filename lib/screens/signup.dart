@@ -18,7 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  // Function to handle sign-up
+  // Core backend logic for creating a new user
   Future<void> _signUp() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       _showErrorDialog('كلمة المرور غير متطابقة');
@@ -26,12 +26,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     try {
+      // Firebase Authentication – create new account
       await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
       final user = _auth.currentUser;
+
+      // Save user info to Firestore users collection
       await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
         'name': _nameController.text.trim(),
         'username': _usernameController.text.trim(),
@@ -40,9 +43,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'createdAt': Timestamp.now(),
       });
 
-
+      // Show success message before navigating
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ تم إنشاء الحساب بنجاح'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2), // Show for 2 seconds before navigating
+        ),
+      );
       // Navigate to login screen if sign-up is successful
       Navigator.pushReplacementNamed(context, '/login');
+
     } on FirebaseAuthException catch (e) {
       _showErrorDialog(e.message ?? 'حدث خطأ أثناء التسجيل');
     } catch (e) {
@@ -67,6 +78,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+
+  // Sign Up Screen layout (UI)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,15 +95,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
+
+          // Form inside SafeArea with scroll
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: SingleChildScrollView( // Scroll view for better screen fit
+              child: SingleChildScrollView(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 10),
-                    Image.asset('assets/IMG_3460 1.png', width: 200, height: 150), // Smaller Logo
+                    Image.asset('assets/IMG_3460 1.png', width: 200, height: 150), //  Logo
                     const SizedBox(height: 10),
                     const Text(
                       'مرحبًا بك\n..تسجيل جديد',
@@ -123,7 +138,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     _buildLabeledTextField('تأكيد كلمة المرور', 'اعد كتابة كلمة المرور', _confirmPasswordController, obscureText: true),
                     const SizedBox(height: 20),
 
-                    // Sign Up Button (Smaller)
+                    // Sign Up Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 60),
@@ -133,18 +148,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ),
                       onPressed: _signUp,
-                      child: const Text(
-                        'تسجيل',
-                        style: TextStyle(
-                          color: Color(0xFF3D0066),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
+                      child: const Text('تسجيل',
+                        style: TextStyle(color: Color(0xFF3D0066),
+                                         fontWeight: FontWeight.bold,
+                                         fontSize: 14,
+                                         ),
+                                       ),
+                                  ),
                     const SizedBox(height: 15),
 
-                    // Already Have Account? Prompt
+                    // Already Have Account?
                     _buildSignInPrompt(context),
                     const SizedBox(height: 10),
                   ],

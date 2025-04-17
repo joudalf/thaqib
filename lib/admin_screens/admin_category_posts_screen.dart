@@ -84,15 +84,20 @@ class _AdminCategoryPostsScreenState extends State<AdminCategoryPostsScreen> {
                 ),
                 Expanded(
                   child: posts.isEmpty
-                      ? const Center(child: CircularProgressIndicator())
+                 ? Center(
+                      child: Text(
+                          "لا توجد مشاركات بعد 🪐",
+                       style: TextStyle(fontSize: 18, color: Colors.white),
+                     ),
+                 )
                       : ListView.builder(
-                    itemCount: posts.length,
-                    itemBuilder: (context, index) {
-                      final post = posts[index];
-                      return _buildPostCard(post);
-                    },
-                  ),
-                ),
+                           itemCount: posts.length,
+                            itemBuilder: (context, index) {
+                          final post = posts[index];
+                          return _buildPostCard(post);
+                       },
+                    ),
+                 ),
               ],
             ),
           ),

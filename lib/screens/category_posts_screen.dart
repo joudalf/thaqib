@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../model/posts.dart';
 import '../services/firestore_service.dart';
 import 'add_post_screen.dart';
+import 'home_page.dart';
+import 'calendar.dart';
 
 class CategoryPostsScreen extends StatefulWidget {
   final String categoryId;
@@ -96,19 +98,24 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: Text(
+                   /*child: Text(
                       "التصوير الفلكي",
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
+                    ),*/
                   ),
                 ),
                 Expanded(
                   child: posts.isEmpty
-                      ? const Center(child: CircularProgressIndicator())
+                      ? Center(
+                    child: Text(
+                       '🪐'' لا توجد مشاركات بعد',
+                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                    ),
+                  )
                       : ListView.builder(
                     itemCount: posts.length,
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -136,20 +143,7 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
         },
         child: const Icon(Icons.add, color: Color(0xFF7A1E6C), size: 30),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A1E6C),
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
-        onTap: (index) {},
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: "تعلم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.info), label: "معلوماتي"),
-        ],
-      ),
+
     );
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:thaqib/screens/login.dart';
 import 'package:thaqib/screens/signup.dart';
-import 'package:thaqib/screens/home.dart';
+import 'package:thaqib/screens/home_page.dart';
 import 'package:thaqib/admin_screens/admin_home_screen.dart';
 
 void main() async {
@@ -59,29 +59,37 @@ class _SplashScreenState extends State<SplashScreen>{
                 fit: BoxFit.cover,
               ),
             ),
-            child: const Text(
-              '', // You can add text here if needed
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 300, // Adjust this value for vertical positioning
-            left: 50, // Adjust this value for horizontal positioning
-            child: Image.asset(
-              'assets/thaqibStar.PNG',
-              width: 300, // Set width as needed
-              height: 300, // Set height as needed
+      ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo with name already inside
+                Image.asset(
+                  'assets/thaqibStar.PNG',
+                  width: 250,
+                  height: 250,
+                ),
+                const SizedBox(height: 10),
+
+                // Qur'anic verse
+                const Text(
+                  '﴾ٱلنَّجْمُ ٱلثَّاقِب﴿ُ',
+                  style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.white70,
+                    fontFamily: 'NotoNaskhArabic',
+                    // fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-}
+  }
 
         // This is the theme of your application.
         //

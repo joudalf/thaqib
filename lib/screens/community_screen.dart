@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../model/category.dart';
 import '../services/firestore_service.dart';
 import 'category_posts_screen.dart';
-import 'home.dart';
+import 'home_page.dart';
 import 'calendar.dart';
+import 'profie_page.dart';
+import 'edu_category_screen.dart';
 
 
 class CommunityScreen extends StatefulWidget {
@@ -39,18 +41,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
       case 0:
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CommunityScreen()));
         break;
-     /* case 1:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LearnScreen()));
-        break;*/
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EduCategoryScreen()));
+        break;
       case 2:
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
         break;
       case 3:
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CalendarScreen()));
         break;
-    /*  case 4:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
-        break;*/
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+        break;
     }
   }
 
@@ -61,12 +63,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+
         title: const Text(
           "المستكشفون",
           style: TextStyle(
@@ -173,18 +170,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: Color(0xFF7A1E6C),
+        selectedItemColor: Color(0xFF3D0066),
         unselectedItemColor: Colors.grey,
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "تعلم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "معلوماتي"),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'تعلم',),
+          BottomNavigationBarItem(icon: SizedBox(height: 35,child: Image.asset('assets/barStar.png'),),label: 'الرئيسية',),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today),label: 'التقويم',),
+          BottomNavigationBarItem(icon: Icon(Icons.person),label: 'معلوماتي',),
+
+
         ],
       ),
     );

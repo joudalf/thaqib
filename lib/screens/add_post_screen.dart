@@ -200,10 +200,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                 /* const Text(
                     "التصوير الفلكي",
                     style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
+                  ),*/
                   const SizedBox(height: 10),
                   const Text(
                     "إضافة مشاركة",

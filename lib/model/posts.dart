@@ -1,18 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Post {
-  final String id;
+  final String id;    // Unique identifier of the post document in Firestore
   final String title;
-  final String content;
+  final String content; // Main content of the post
   final String imageUrl;
-  final String userProfileImage; // ✅ Add user profile image
-  final String username; // ✅ Add username
-  final String userHandle; // ✅ Add user handle (@username)
-  final DateTime timestamp; // ✅ Keep DateTime for correct Firestore conversion
-  final List<Map<String, dynamic>> replies;// ✅ Add replies as a list
-  final String userId;
+  final String userProfileImage;
+  final String username;
+  final String userHandle;
+  final DateTime timestamp;  // Timestamp of when the post was created
+  final List<Map<String, dynamic>> replies;
+  final String userId; // UID of the user who created the post
 
 
+  // Constructor for creating a new Post instance
   Post({
     required this.id,
     required this.title,
@@ -27,48 +28,47 @@ class Post {
 
   });
 
-  // ✅ Convert Firestore Document to Post object
+  // Factory method for converting Firestore document data into a Post object
   factory Post.fromFirestore(Map<String, dynamic> data, String id){
     return Post(
-      id: id,
-      title: data['title'] ?? '',
-      content: data['content'] ?? '',
-      imageUrl: data['imageUrl'] ?? '',
-      userProfileImage: data['userProfileImage'] ?? '', // ✅ Get user image
-      username: data['username'] ?? 'مستخدم مجهول', // ✅ Get username
-      userHandle: data['userHandle'] ?? '@unknown', // ✅ Get user handle (@)
-      timestamp: (data['timestamp'] as Timestamp).toDate(), // ✅ Fix DateTime issue
-      replies: (data['replies'] as List?)?.map<Map<String, dynamic>>((reply) {
-        if (reply is Map<String, dynamic>) {
-          return reply;
-        } else {
-          return {
-            'text': reply.toString(),
-            'timestamp': Timestamp.now(),
-            'userId': '',
-            'username': 'مجهول',
-            'name': 'مجهول',
-            'userProfileImage': '',
-          };
-        }
-      }).toList() ?? [],
-      userId: data['userId'] ?? '',
-
-
-    );
+                id: id,
+                title: data['title'] ?? '',
+                content: data['content'] ?? '',
+                imageUrl: data['imageUrl'] ?? '',
+                userProfileImage: data['userProfileImage'] ?? '',
+                username: data['username'] ?? 'مستخدم مجهول',
+                userHandle: data['userHandle'] ?? '@unknown',
+                timestamp: (data['timestamp'] as Timestamp).toDate(),
+                replies: (data['replies'] as List?)?.map<Map<String, dynamic>>((reply) {
+                  if (reply is Map<String, dynamic>) {
+                    return reply;
+                  } else {
+                    // Fallback: if reply is stored as plain text, convert it to a structured map
+                         return {
+                              'text': reply.toString(),
+                              'timestamp': Timestamp.now(),
+                              'userId': '',
+                              'username': 'مجهول',
+                              'name': 'مجهول',
+                              'userProfileImage': '',
+                            };
+                        }
+                }).toList() ?? [],
+                userId: data['userId'] ?? '',
+     );
   }
 
-  // ✅ Convert Post object to Firestore Map
+  // Converts a Post object into a Map that can be saved to Firestore
   Map<String, dynamic> toMap() {
     return {
       'title': title,
       'content': content,
       'imageUrl': imageUrl,
-      'userProfileImage': userProfileImage, // ✅ Save user image
-      'username': username, // ✅ Save username
-      'userHandle': userHandle, // ✅ Save user handle (@)
-     'timestamp': Timestamp.fromDate(timestamp),// ✅ Fix DateTime issue
-      'replies': replies, // ✅ Save replies
+      'userProfileImage': userProfileImage,
+      'username': username,
+      'userHandle': userHandle,
+     'timestamp': Timestamp.fromDate(timestamp),
+      'replies': replies,
     };
   }
 }

@@ -1,12 +1,21 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_profile.dart';
 import 'login.dart'; // Import the login page here
+import 'home_page.dart';
+import 'calendar.dart';
+import 'community_screen.dart';
+import 'edu_category_screen.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
   final User? user = FirebaseAuth.instance.currentUser;
+  int _currentIndex = 4;
 
   Future<DocumentSnapshot> getUserData() async {
     return await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
@@ -21,6 +30,32 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Navigate to different pages based on index
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CommunityScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EduCategoryScreen()));
+        break;
+      case 2:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        break;
+      case 3:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CalendarScreen()));
+        break;
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,9 +68,10 @@ class ProfilePage extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        child: FutureBuilder<DocumentSnapshot>(
-          future: getUserData(),
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance.collection('users').doc(user!.uid).snapshots(),
           builder: (context, snapshot) {
+
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(color: Colors.white));
             }
@@ -108,7 +144,7 @@ class ProfilePage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                   ),
                   child: const Text(
@@ -123,19 +159,20 @@ class ProfilePage extends StatelessWidget {
       ),
       // 🔹 Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A1E6C),
+        selectedItemColor: Color(0xFF3D0066),
         unselectedItemColor: Colors.grey,
-        currentIndex: 4, // 4 = "معلوماتي"
-        onTap: (index) {
-          // 👉 You can add navigation logic here if needed
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: "تعلم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_sharp), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "معلوماتي"),
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'تعلم',),
+          BottomNavigationBarItem(icon: SizedBox(height: 35,child: Image.asset('assets/barStar.png'),),label: 'الرئيسية',),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today),label: 'التقويم',),
+          BottomNavigationBarItem(icon: Icon(Icons.person),label: 'معلوماتي',),
+
+
         ],
       ),
     );

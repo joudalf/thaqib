@@ -1,21 +1,40 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class EduDetailScreen extends StatelessWidget {
+class AdminEduDetailScreen extends StatefulWidget {
   final String id;
+  const AdminEduDetailScreen({Key? key, required this.id}) : super(key: key);
 
-  const EduDetailScreen({Key? key, required this.id}) : super(key: key);
+  @override
+  State<AdminEduDetailScreen> createState() => _AdminEduDetailScreenState();
+}
 
+class _AdminEduDetailScreenState extends State<AdminEduDetailScreen> {
   Future<DocumentSnapshot> fetchData() async {
-    return await FirebaseFirestore.instance.collection('edu').doc(id).get();
+    return await FirebaseFirestore.instance.collection('edu').doc(widget.id).get();
+  }
+
+  Future<void> deleteCategory() async {
+    await FirebaseFirestore.instance.collection('edu').doc(widget.id).delete();
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        child: const Icon(Icons.add, color: Color(0xFF7A1E6C)),
+        onPressed: () {
+          // TODO: Navigate to Add Detail Screen
+        },
+      ),
       body: Stack(
         children: [
-          // 🔹 خلفية متدرجة
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -26,7 +45,6 @@ class EduDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-
           SafeArea(
             child: FutureBuilder<DocumentSnapshot>(
               future: fetchData(),
@@ -36,12 +54,7 @@ class EduDetailScreen extends StatelessWidget {
                 }
 
                 if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Center(
-                    child: Text(
-                      "المحتوى غير متوفر",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  );
+                  return const Center(child: Text("المحتوى غير متوفر", style: TextStyle(color: Colors.white)));
                 }
 
                 final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -49,7 +62,6 @@ class EduDetailScreen extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🔹 سهم الرجوع والعنوان
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       child: Row(
@@ -59,21 +71,29 @@ class EduDetailScreen extends StatelessWidget {
                             onPressed: () => Navigator.pop(context),
                           ),
                           const Spacer(),
-                          Text(
-                            data['title'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                          const SizedBox(width: 20),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.white),
+                            onPressed: () async {
+                              final confirm = await showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: const Text("تأكيد الحذف"),
+                                  content: const Text("هل أنت متأكد من حذف هذا المحتوى؟"),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("إلغاء")),
+                                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("حذف")),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await deleteCategory();
+                              }
+                            },
+                          )
                         ],
                       ),
                     ),
 
-                    // 🔹 محتوى داخل كرت أبيض
                     Expanded(
                       child: SingleChildScrollView(
                         child: Container(
@@ -86,61 +106,39 @@ class EduDetailScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              // القسم الأول
+                              Text(
+                                data['title'] ?? '',
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                                textAlign: TextAlign.right,
+                              ),
+                              const SizedBox(height: 20),
                               Text(
                                 data['section1Title'] ?? '',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  color: Colors.black,
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
                                 textAlign: TextAlign.right,
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 data['section1Text'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                ),
+                                style: const TextStyle(fontSize: 14, color: Colors.black),
                                 textAlign: TextAlign.right,
                               ),
                               const SizedBox(height: 20),
-
-                              // صورة مع ميزة التكبير
                               if (data['imageUrl'] != null && data['imageUrl'].toString().isNotEmpty)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: InteractiveViewer(
-                                    panEnabled: true,
-                                    boundaryMargin: const EdgeInsets.all(20),
-                                    minScale: 1,
-                                    maxScale: 5,
-                                    child: Image.network(
-                                      data['imageUrl'],
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
+                                  child: Image.network(data['imageUrl'], fit: BoxFit.cover),
                                 ),
                               const SizedBox(height: 20),
-
-                              // القسم الثاني
                               Text(
                                 data['section2Title'] ?? '',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  color: Colors.black,
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
                                 textAlign: TextAlign.right,
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 data['section2Text'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                ),
+                                style: const TextStyle(fontSize: 14, color: Colors.black),
                                 textAlign: TextAlign.right,
                               ),
                             ],

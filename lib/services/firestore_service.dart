@@ -109,6 +109,16 @@ class FirestoreService {
     }
   }
 
+  Future<void> addEduCategory(String name, String imageUrl) async {
+    await FirebaseFirestore.instance.collection('edu_category').add({
+      'name': name,
+      'imageUrl': imageUrl,
+      'timestamp': Timestamp.now(),
+    });
+
+  }
+
+
 
 
 

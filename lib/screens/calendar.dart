@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home.dart';
+import 'home_page.dart';
 import 'community_screen.dart';
+import 'edu_category_screen.dart';
+import 'profie_page.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -24,12 +26,12 @@ class _CalendarScreenState extends State<CalendarScreen>{
     try {
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('Calendar')
-          .doc('Nov_2024') // stored document ID
+          .doc('Nov') // stored document ID
           .get();
 
       if (doc.exists) {
         setState(() {
-          calendarImageUrl = doc['imageUrl']; // Get the image URL
+          calendarImageUrl = doc['image']; // Get the image URL
         });
       }
     } catch (e) {
@@ -48,18 +50,18 @@ class _CalendarScreenState extends State<CalendarScreen>{
       case 0:
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CommunityScreen()));
         break;
-    /* case 1:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LearnScreen()));
-        break;*/
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EduCategoryScreen()));
+        break;
       case 2:
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
         break;
       case 3:
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CalendarScreen()));
         break;
-    /*  case 4:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
-        break;*/
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+        break;
     }
   }
   @override
@@ -67,8 +69,9 @@ class _CalendarScreenState extends State<CalendarScreen>{
     return Scaffold(
       body: Stack(
         children: [
+
           // Background Image
-          Container(
+        Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage("assets/gradient 1.png"), // Background gradient image
@@ -77,17 +80,19 @@ class _CalendarScreenState extends State<CalendarScreen>{
             ),
           ),
 
+
           SafeArea(
             child: Column(
               children: [
-                // 🔹 Back Button
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    "التقويم",
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
+                // 🔹 Back Button
+
 
                 const SizedBox(height: 10),
 
@@ -102,18 +107,23 @@ class _CalendarScreenState extends State<CalendarScreen>{
 
                 // 🔹 Calendar Image (Fetched from Firestore)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: calendarImageUrl == null
-                      ? const Center(child: CircularProgressIndicator()) // Show loading spinner
-                      : ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),child: calendarImageUrl == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: InteractiveViewer(
+                    panEnabled: true,
+                    minScale: 0.8,
+                    maxScale: 4.0,
                     child: Image.network(
                       calendarImageUrl!,
-                      width: 700,// Responsive width
-                      height: MediaQuery.of(context).size.height * 0.5, // Adjust height
+                      width: 700,
+                      height: MediaQuery.of(context).size.height * 0.5,
                       fit: BoxFit.cover,
                     ),
                   ),
+                ),
+
                 ),
 
                 const SizedBox(height: 20),
@@ -143,20 +153,22 @@ class _CalendarScreenState extends State<CalendarScreen>{
 
       // 🔹 Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A1E6C),
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "تعلم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "معلوماتي"),
-        ],
-      ),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: Color(0xFF3D0066),
+          unselectedItemColor: Colors.grey,
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+          items: [
+            BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),
+            BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'تعلم',),
+            BottomNavigationBarItem(icon: SizedBox(height: 35,child: Image.asset('assets/barStar.png'),),label: 'الرئيسية',),
+            BottomNavigationBarItem(icon: Icon(Icons.calendar_today),label: 'التقويم',),
+            BottomNavigationBarItem(icon: Icon(Icons.person),label: 'معلوماتي',),
+
+
+    ],
+    ),
     );
   }
 }

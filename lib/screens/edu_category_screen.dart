@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'edu_detail_screen.dart';
+import 'calendar.dart';
+import 'community_screen.dart';
+import 'profie_page.dart';
+import 'home_page.dart';
 
 class EduCategoryScreen extends StatefulWidget {
   const EduCategoryScreen({Key? key}) : super(key: key);
@@ -11,6 +15,27 @@ class EduCategoryScreen extends StatefulWidget {
 
 class _EduCategoryScreenState extends State<EduCategoryScreen> {
   List<Map<String, dynamic>> categories = [];
+  int _currentIndex = 1;
+
+  void _onTabTapped(int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CommunityScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EduCategoryScreen()));
+        break;
+      case 2:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        break;
+      case 3:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CalendarScreen()));
+        break;
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+        break;
+    }
+  }
 
   @override
   void initState() {
@@ -21,13 +46,17 @@ class _EduCategoryScreenState extends State<EduCategoryScreen> {
   Future<void> fetchCategories() async {
     final snapshot = await FirebaseFirestore.instance.collection('edu_category').get();
     setState(() {
-      categories = snapshot.docs.map((doc) => doc.data()).toList();
+      categories = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id; // ✅ لازم نضيف id علشان نستخدمه في التنقل
+        return data;
+      }).toList();
     });
   }
 
-  void _onTabTapped(int index) {
-    // Add navigation if needed
-  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +104,7 @@ class _EduCategoryScreenState extends State<EduCategoryScreen> {
                           height: 100,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white), // 🔲 Border
+                            border: Border.all(color: Colors.white), // ✅ حدود بيضاء
                             image: DecorationImage(
                               image: NetworkImage(category['imageUrl']),
                               fit: BoxFit.cover,
@@ -104,17 +133,20 @@ class _EduCategoryScreenState extends State<EduCategoryScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
-        onTap: _onTabTapped,
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A1E6C),
+        selectedItemColor: Color(0xFF3D0066),
         unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "تعلَّم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "معلوماتي"),
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'تعلم',),
+          BottomNavigationBarItem(icon: SizedBox(height: 35,child: Image.asset('assets/barStar.png'),),label: 'الرئيسية',),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today),label: 'التقويم',),
+          BottomNavigationBarItem(icon: Icon(Icons.person),label: 'معلوماتي',),
+
+
         ],
       ),
     );

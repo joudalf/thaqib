@@ -1,16 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:thaqib/services/firestore_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:thaqib/services/firestore_service.dart';
 import 'dart:convert';
 
-class AddCategoryScreen extends StatefulWidget {
+class AddEduCategoryScreen extends StatefulWidget {
   @override
-  _AddCategoryScreenState createState() => _AddCategoryScreenState();
+  _AddEduCategoryScreenState createState() => _AddEduCategoryScreenState();
 }
 
-class _AddCategoryScreenState extends State<AddCategoryScreen> {
+class _AddEduCategoryScreenState extends State<AddEduCategoryScreen> {
   final TextEditingController _titleController = TextEditingController();
   File? _selectedImage;
   String? _imageUrl;
@@ -52,19 +52,22 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     }
   }
 
-  Future<void> _addCategory() async {
+  Future<void> _addEduCategory() async {
     if (_titleController.text.isEmpty || _imageUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("يرجى إدخال العنوان والصورة")),
-      ); print("🚫 لم يتم الإدخال بسبب: العنوان أو الصورة ناقصة");
-      return;
+      );       print("🚫 لم يتم الإدخال بسبب: العنوان أو الصورة ناقصة");
+
+    return;
     }
 
     setState(() {
       _isUploading = true;
     });
+    print("📤 Adding edu category: ${_titleController.text}, $_imageUrl");
 
-    await FirestoreService().addCategory(_titleController.text, _imageUrl!);
+    // Save to Firestore under edu_category
+    await FirestoreService().addEduCategory(_titleController.text, _imageUrl!);
     Navigator.pop(context);
   }
 
@@ -91,18 +94,16 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "إضافة تصنيف جديد",
+                    "إضافة تصنيف تعليمي",
                     style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
 
-                  // 🔹 Title
                   const Text("عنوان التصنيف", style: TextStyle(color: Colors.white)),
                   TextField(
                     controller: _titleController,
                     textDirection: TextDirection.rtl,
                     textAlign: TextAlign.right,
-                    style: const TextStyle(fontFamily: 'NotoNaskhArabic'),
                     decoration: InputDecoration(
                       hintText: "اكتب عنوان التصنيف",
                       hintStyle: TextStyle(color: Colors.grey[300]),
@@ -113,7 +114,6 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  // 🔹 Image Picker
                   const Text("صورة التصنيف", style: TextStyle(color: Colors.white)),
                   GestureDetector(
                     onTap: pickImage,
@@ -142,7 +142,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 🔹 Buttons
+                  // Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -156,7 +156,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                       ),
                       const SizedBox(width: 10),
                       ElevatedButton(
-                        onPressed: _isUploading ? null : _addCategory,
+                        onPressed: _isUploading ? null : _addEduCategory,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),

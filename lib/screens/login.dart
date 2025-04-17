@@ -220,7 +220,7 @@ class LoginScreen extends StatelessWidget {
       } else if (e.code == 'invalid-email') {
         errorMessage = 'البريد الإلكتروني غير صالح.';
       } else {
-        errorMessage = 'حدث خطأ: ${e.message}';
+        errorMessage = 'كلمة المرور او البريد الاكتروني غير صحيحة';
       }
 
 
@@ -229,8 +229,15 @@ class LoginScreen extends StatelessWidget {
         context: context,
         builder: (context) =>
             AlertDialog(
-              title: const Text('خطأ'),
-              content:Text(errorMessage),
+              title: const Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text('خطأ'),
+              ),
+              content: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text(errorMessage),
+              ),
+
 
               actions: [
                 TextButton(

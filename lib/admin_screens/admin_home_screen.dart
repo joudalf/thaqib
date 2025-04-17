@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:thaqib/admin_screens/admin_calendar.dart';
 import 'package:thaqib/admin_screens/admin_community_screen.dart';
+import 'package:thaqib/admin_screens/admin_edu_category_screen.dart';
 
 
 
@@ -22,6 +23,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => AdminCommunityScreen()),
+      );
+    }else if (index == 1){
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AdminEduCategoryScreen()),
       );
     }
     else {
