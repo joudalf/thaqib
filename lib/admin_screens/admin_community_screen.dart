@@ -3,6 +3,11 @@ import 'package:thaqib/services/firestore_service.dart';
 import 'package:thaqib/admin_screens/add_category_screen.dart';
 import 'package:thaqib/admin_screens/admin_category_posts_screen.dart';
 import '../model/category.dart';
+import 'admin_home_screen.dart';
+import 'admin_calendar.dart';
+import 'admin_profile_page.dart';
+import 'admin_edu_category_screen.dart';
+
 
 
 class AdminCommunityScreen extends StatefulWidget {
@@ -37,6 +42,24 @@ class _AdminCommunityScreenState extends State<AdminCommunityScreen> {
     setState(() {
       _currentIndex = index;
     });
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCommunityScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminEduCategoryScreen()));
+        break;
+      case 2:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminHomePage()));
+        break;
+      case 3:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCalendarScreen()));
+        break;
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminProfilePage()));
+        break;
+    }
   }
 
   @override
@@ -189,19 +212,22 @@ class _AdminCommunityScreenState extends State<AdminCommunityScreen> {
           ),
         ],
       ),
+
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: Color(0xFF7A1E6C),
+        selectedItemColor: Color(0xFF3D0066),
         unselectedItemColor: Colors.grey,
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "تعلم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "معلوماتي"),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'تعلم',),
+          BottomNavigationBarItem(icon: SizedBox(height: 35,child: Image.asset('assets/barStar.png'),),label: 'الرئيسية',),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today),label: 'التقويم',),
+          BottomNavigationBarItem(icon: Icon(Icons.person),label: 'معلوماتي',),
+
+
         ],
       ),
     );

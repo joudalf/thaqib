@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'edit_profile.dart'; // Import EditProfileScreen if needed
+import 'login.dart'; // ← make sure this imports your login screen
 
 class AccountSettingsPage extends StatefulWidget {
   @override
@@ -8,94 +8,100 @@ class AccountSettingsPage extends StatefulWidget {
 }
 
 class _AccountSettingsPageState extends State<AccountSettingsPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final _emailController    = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _newPasswordController    = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
-  // Function to change the email after reauthentication
-  Future<void> _changeEmail(BuildContext context) async {
+  /// Sends the verification‑before‑update link to the **old** email,
+  /// then shows a confirmation in Arabic and navigates to login.
+  Future<void> _changeEmail(BuildContext ctx) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(content: Text('لا يوجد مستخدم مسجل الدخول')),
+      );
+      return;
+    }
+
     try {
-      User? user = FirebaseAuth.instance.currentUser;
+      // 1) Reauthenticate
+      final cred = EmailAuthProvider.credential(
+        email:    user.email!,
+        password: _passwordController.text.trim(),
+      );
+      await user.reauthenticateWithCredential(cred);
 
-      if (user != null) {
-
-        print("👤 Current Email: ${user.email}");
-        print("✏️ New Email entered: ${_emailController.text}");
-        print("📧 Email Verified? ${user.emailVerified}");
-        // Reauthenticate with the current password entered by the user
-        print("🔐 Reauthenticating...");
-        AuthCredential credential = EmailAuthProvider.credential(
-          email: user.email!,
-          password: _passwordController.text,
+      // 2) No‑op check
+      final newEmail = _emailController.text.trim();
+      if (newEmail == user.email) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text('البريد الجديد مطابق للحالي')),
         );
-
-        await user.reauthenticateWithCredential(credential);
-        print("✅ Reauthenticated successfully");
-
-        // Check that the new email is different from the current one
-        if (_emailController.text == user.email) {
-          print("⚠️ New email is same as current");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('البريد الإلكتروني الجديد هو نفسه البريد الحالي')),
-          );
-          return;
-        }
-
-        // Update the email address
-        print("📤 Updating email...");
-        await user.updateEmail(_emailController.text);
-        print("✅ Email updated");
-        await user.reload();
-        user = FirebaseAuth.instance.currentUser;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم تغيير البريد الإلكتروني بنجاح')),
-        );
+        return;
       }
-    } catch (e) {
-      print("❌ Error during email change: $e");
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ في تغيير البريد الإلكتروني: ${e.toString()}')),
+      // 3) Build ActionCodeSettings
+      final actionSettings = ActionCodeSettings(
+        url: 'https://thaqib-c2d3e.firebaseapp.com/__/auth/action',
+        handleCodeInApp: false,
+      );
+
+      // 4) Send link to old email
+      await user.verifyBeforeUpdateEmail(newEmail, actionSettings);
+
+      // —— NEW: show Arabic confirmation and navigate to login ——
+      await showDialog(
+        context: ctx,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: Text('تم ارسال البريد الإلكتروني بنجاح'),
+          content: Text('سيتم إعادة توجيهك إلى صفحة تسجيل الدخول.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // close dialog
+                Navigator.of(ctx).pop();
+                // clear stack & go to LoginPage
+                Navigator.of(ctx).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                      (_) => false,
+                );
+              },
+              child: Text('حسناً'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(content: Text('خطأ: ${e.toString()}')),
       );
     }
   }
 
-  // Function to change the password
-  Future<void> _changePassword(BuildContext context) async {
+  /// Simply updates password (user remains recently authenticated)
+  Future<void> _changePassword(BuildContext ctx) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        // (Assumes the user is already recently authenticated.)
-        await user.updatePassword(_newPasswordController.text);
-        await user.reload();
-        user = FirebaseAuth.instance.currentUser;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم تغيير كلمة المرور بنجاح')),
-        );
-      }
+      await user.updatePassword(_newPasswordController.text.trim());
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(content: Text('تم تغيير كلمة المرور بنجاح')),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(ctx).showSnackBar(
         SnackBar(content: Text('خطأ في تغيير كلمة المرور: ${e.toString()}')),
       );
     }
   }
-  @override
-  void initState() {
-    super.initState();
-
-    final providerId = FirebaseAuth.instance.currentUser?.providerData.first.providerId;
-    print('🪪 Logged in with provider: $providerId');
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // No AppBar; UI elements are placed manually for full control
       body: Directionality(
-        textDirection: TextDirection.rtl, // Ensure text displays RTL
+        textDirection: TextDirection.rtl,
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -105,35 +111,37 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Back arrow at the top-left that navigates back to EditProfileScreen
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                // Back arrow
+                Padding(
+                  padding: const EdgeInsets.only(top: 20), // مقدار النزول من الأعلى
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon: Transform.rotate(
+                        angle: 3.14, // 180 درجة
+                        child: Icon(Icons.arrow_forward_ios, color: Colors.white),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
                 ),
+
+
+
                 SizedBox(height: 20),
-                // Top-right: Row containing the gear icon and then text "اعدادات الحساب"
+
+                // Settings title + gear
                 Align(
                   alignment: Alignment.topRight,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
+                    textDirection: TextDirection.ltr,
                     children: [
-                      // Gear icon on the left
-                      IconButton(
-                        icon: Icon(Icons.settings, color: Colors.white),
-                        onPressed: () {
-                          // Optionally, define an action or leave it inert.
-                        },
-                      ),
+                      Icon(Icons.settings, color: Colors.white),
                       SizedBox(width: 8),
-                      // Text "اعدادات الحساب" to the right of the gear icon
                       Text(
                         'اعدادات الحساب',
                         style: TextStyle(
@@ -146,136 +154,151 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   ),
                 ),
                 SizedBox(height: 40),
-                // Option 1: Change Email
+
+                // ListTile: Change Email
                 ListTile(
                   title: Text(
                     'تعديل البريد الإلكتروني',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                     textAlign: TextAlign.right,
                   ),
                   onTap: () {
-                    // Show dialog for updating email
                     showDialog(
                       context: context,
-                      builder: (BuildContext context) {
-                        return Dialog(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Container(
-                            height: 300,
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextField(
-                                  controller: _emailController,
-                                  decoration: InputDecoration(
-                                    labelText: 'البريد الإلكتروني الجديد',
-                                    labelStyle: TextStyle(color: Colors.black),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                  ),
-                                  textAlign: TextAlign.right,
+                      builder: (ctx) => Dialog(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: _emailController,
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                                decoration: InputDecoration(
+                                  labelText: 'البريد الإلكتروني الجديد',
+                                  labelStyle: TextStyle(fontFamily: 'NotoNaskhArabic', fontSize: 16),
+                                  alignLabelWithHint: true,
+                                  hintTextDirection: TextDirection.rtl,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                 ),
-                                TextField(
-                                  controller: _passwordController,
-                                  decoration: InputDecoration(
-                                    labelText: 'كلمة المرور الحالية',
-                                    labelStyle: TextStyle(color: Colors.black),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                  ),
-                                  obscureText: true,
-                                  textAlign: TextAlign.right,
+                              ),
+
+                              TextField(
+                                controller: _emailController,
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                                decoration: InputDecoration(
+                                  labelText: 'كلمة المرور الحالية',
+                                  labelStyle: TextStyle(fontFamily: 'NotoNaskhArabic', fontSize: 16),
+                                  alignLabelWithHint: true,
+                                  hintTextDirection: TextDirection.rtl,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () => _changeEmail(context),
+                              ),
 
 
-                                    child: Text('حفظ التعديلات'),
-
-                                ),
-                              ],
-                            ),
+                              SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(ctx).pop();
+                                  _changeEmail(context);
+                                },
+                                child: Text('حفظ التعديلات'),
+                              )
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     );
                   },
                 ),
-                Divider(),
-                // Option 2: Change Password
+                Divider(color: Colors.white70),
+
+                // ListTile: Change Password
                 ListTile(
                   title: Text(
                     'تعديل كلمة المرور',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    textDirection: TextDirection.rtl, // Set Right-To-Left direction
+
+                    style: TextStyle(
+
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                     textAlign: TextAlign.right,
                   ),
                   onTap: () {
-                    // Show dialog for updating password
                     showDialog(
                       context: context,
-                      builder: (BuildContext context) {
-                        return Dialog(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Container(
-                            height: 350,
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextField(
-                                  controller: _passwordController,
-                                  decoration: InputDecoration(
-                                    labelText: 'كلمة المرور الحالية',
-                                    labelStyle: TextStyle(color: Colors.black),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                  ),
-                                  obscureText: true,
-                                  textAlign: TextAlign.right,
+                      builder: (ctx) => Dialog(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+
+                              TextField(
+                                controller: _emailController,
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                                decoration: InputDecoration(
+                                  labelText: 'كلمة المرور الجديدة',
+                                  labelStyle: TextStyle(fontFamily: 'NotoNaskhArabic', fontSize: 16),
+                                  alignLabelWithHint: true,
+                                  hintTextDirection: TextDirection.rtl,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                 ),
-                                TextField(
-                                  controller: _newPasswordController,
-                                  decoration: InputDecoration(
-                                    labelText: 'كلمة المرور الجديدة',
-                                    labelStyle: TextStyle(color: Colors.black),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                  ),
-                                  obscureText: true,
-                                  textAlign: TextAlign.right,
+                              ),
+
+
+                              TextField(
+                                controller: _emailController,
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                                decoration: InputDecoration(
+                                  labelText: 'تأكيد كلمة المرور الجديدة',
+                                  labelStyle: TextStyle(fontFamily: 'NotoNaskhArabic', fontSize: 16),
+                                  alignLabelWithHint: true,
+                                  hintTextDirection: TextDirection.rtl,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                 ),
-                                TextField(
-                                  controller: _confirmPasswordController,
-                                  decoration: InputDecoration(
-                                    labelText: 'تأكيد كلمة المرور الجديدة',
-                                    labelStyle: TextStyle(color: Colors.black),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                                  ),
-                                  obscureText: true,
-                                  textAlign: TextAlign.right,
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    if (_newPasswordController.text == _confirmPasswordController.text) {
-                                      _changePassword(context);
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('كلمات المرور غير متطابقة')),
-                                      );
-                                    }
-                                  },
-                                  child: Text('حفظ التعديلات'),
-                                ),
-                              ],
-                            ),
+                              ),
+                              SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(ctx).pop();
+                                  if (_newPasswordController.text.trim() !=
+                                      _confirmPasswordController.text.trim()) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'كلمات المرور غير متطابقة')),
+                                    );
+                                    return;
+                                  }
+                                  _changePassword(context);
+                                },
+                                child: Text('حفظ التعديلات'),
+                              )
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     );
                   },
                 ),
-                Divider(),
+                Divider(color: Colors.white70),
               ],
             ),
           ),

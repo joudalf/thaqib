@@ -7,13 +7,19 @@ class MapPageUser extends StatelessWidget {
 
   Future<void> _launchURL(String url) async {
     final uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.inAppWebView, // ✨ فتح داخل التطبيق
+      webViewConfiguration: const WebViewConfiguration(
+        enableJavaScript: true,
+      ),
+    )) {
       throw 'Could not launch $url';
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {   // ✅ هنا صار صح
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -55,11 +61,7 @@ class MapPageUser extends StatelessWidget {
                       style: TextStyle(color: Colors.white),
                     ),
                   );
-
                 }
-                print("📡 تم الاتصال بقاعدة البيانات");
-                print("📥 عدد الإشعارات: ${snapshot.data!.docs.length}");
-
 
                 return ListView(
                   children: snapshot.data!.docs.map((doc) {
@@ -68,13 +70,36 @@ class MapPageUser extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: GestureDetector(
                         onTap: () => _launchURL(data['url']),
-                        child: Text(
-                          data['title'],
-                          style: const TextStyle(
-                            decoration: TextDecoration.underline,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                data['title'] ?? '',
+                                style: const TextStyle(
+                                  decoration: TextDecoration.underline,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                              const SizedBox(height: 4),
+                              if (data['description'] != null && data['description'].toString().isNotEmpty)
+                                Text(
+                                  data['description'],
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                            ],
                           ),
                         ),
                       ),

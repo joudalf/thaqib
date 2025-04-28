@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'admin_home_screen.dart';
+import 'admin_community_screen.dart';
+import 'admin_profile_page.dart';
+import 'admin_edu_category_screen.dart';
+
 
 class AdminCalendarScreen extends StatefulWidget {
   @override
@@ -112,8 +117,25 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
     setState(() {
       _currentIndex = index;
     });
-  }
 
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCommunityScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminEduCategoryScreen()));
+        break;
+      case 2:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminHomePage()));
+        break;
+      case 3:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCalendarScreen()));
+        break;
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminProfilePage()));
+        break;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,44 +179,105 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: calendarImageUrl == null
                       ? const Center(
-                      child: Text("لا يوجد تقويم حالي", style: TextStyle(color: Colors.white)))
+                    child: Text(
+                      "لا يوجد تقويم حالي",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
                       : Stack(
                     alignment: Alignment.topRight,
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          calendarImageUrl!,
-                          width: double.infinity,
-                          height: MediaQuery.of(context).size.height * 0.5,
-                          fit: BoxFit.cover,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FullScreenImageScreen(imageUrl: calendarImageUrl!),
+                              ),
+                            );
+                          },
+                          child: Image.network(
+                            calendarImageUrl!,
+                            width: double.infinity,
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: deleteCalendarImage,
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            bool confirm = await _showDeleteConfirmation();
+                            if (confirm) {
+                              await FirebaseFirestore.instance.collection('Calendar').doc('Nov_2024').delete();
+                              setState(() {
+                                calendarImageUrl = null;
+                              });
+                            }
+                          },
+                        ),
                       ),
                     ],
                   ),
-                ),
+                )
+
+
+
               ],
             ),
           ),
         ],
       ),
+
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A1E6C),
+        selectedItemColor: Color(0xFF3D0066),
         unselectedItemColor: Colors.grey,
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "تعلم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "معلوماتي"),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'تعلم',),
+          BottomNavigationBarItem(icon: SizedBox(height: 35,child: Image.asset('assets/barStar.png'),),label: 'الرئيسية',),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today),label: 'التقويم',),
+          BottomNavigationBarItem(icon: Icon(Icons.person),label: 'معلوماتي',),
+
+
+        ],
+      ),
+    );
+  }
+}class FullScreenImageScreen extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageScreen({Key? key, required this.imageUrl}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              child: Image.network(imageUrl),
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
         ],
       ),
     );

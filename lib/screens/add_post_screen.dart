@@ -45,27 +45,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
     }
   }
 
-//-----------------------------
-
-  // ✅ Upload Image to Firebase Storage
-  /*Future<String?> uploadImage(File imageFile) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      Reference storageRef = FirebaseStorage.instance.ref().child("post_images/$fileName.jpg");
-
-      UploadTask uploadTask = storageRef.putFile(imageFile);
-      TaskSnapshot snapshot = await uploadTask;
 
 
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-      print("✅ Image uploaded: $downloadUrl");
-      return downloadUrl;
-    } catch (e) {
-      print("❌ Error uploading image: $e");
-      return null;
-    }
-  }
-*/
+
   //-------------------------------------
 
   // ✅ Save Post to Firestore
@@ -212,14 +194,23 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   const SizedBox(height: 20),
 
                   // 🔹 Title Field
-                  const Text("العنوان", style: TextStyle(color: Colors.white)),
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "العنوان",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
                   TextField(
                     controller: _titleController,
                     textDirection: TextDirection.rtl,
                     textAlign: TextAlign.right,
                     style: const TextStyle(fontFamily: 'NotoNaskhArabic'),
                     decoration: InputDecoration(
+
                       hintText: "عنوان المشاركة",
+                      hintTextDirection: TextDirection.rtl,
                       hintStyle: TextStyle(color: Colors.grey[300]),
                       filled: true,
                       fillColor: Colors.white,
@@ -229,15 +220,24 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   const SizedBox(height: 10),
 
                   // 🔹 Content Field
-                  const Text("محتوى المشاركة", style: TextStyle(color: Colors.white)),
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "محتوى المشاركة",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
                   TextField(
                     controller: _contentController,
+
                     textDirection: TextDirection.rtl, // Set Right-To-Left direction
                     textAlign: TextAlign.right, // Align text to the right
                     style: const TextStyle(fontFamily: 'NotoNaskhArabic'),
                     maxLines: 4,
                     decoration: InputDecoration(
                       hintText: "محتوى المشاركة",
+                      hintTextDirection: TextDirection.rtl,
                       hintStyle: TextStyle(color: Colors.grey[300]),
                       filled: true,
                       fillColor: Colors.white,
@@ -247,7 +247,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   const SizedBox(height: 10),
 
                   // 🔹 Image Upload Field
-                  const Text("إضافة صورة", style: TextStyle(color: Colors.white)),
+              const Align(
+                alignment: Alignment.centerRight,
+                child: Text("إضافة صورة",  style: TextStyle(color: Colors.white),
+                ),
+              ),
                   GestureDetector(
                     onTap: pickImage,
                     child: Container(

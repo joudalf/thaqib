@@ -16,6 +16,7 @@ class CategoryPostsScreen extends StatefulWidget {
   _CategoryPostsScreenState createState() => _CategoryPostsScreenState();
 }
 
+
 class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   List<Post> posts = [];
@@ -147,102 +148,108 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
     );
   }
 
+  // Displaying each post in a styled card with user info and options
   Widget _buildPostCard(Post post) {
-    return Card(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: NetworkImage(post.userProfileImage),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(post.username, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text("@${post.userHandle}", style: const TextStyle(color: Colors.grey)),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  _formatTimestamp(post.timestamp),
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(width: 5),
-                FirebaseAuth.instance.currentUser?.uid == post.userId
-                    ? PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'delete') {
-                      _showDeletePostDialog(post);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 10),
-                          Text('حذف المشاركة', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  icon: const Icon(Icons.more_horiz, color: Colors.grey),
-                )
-                    : const Icon(Icons.more_horiz, color: Colors.grey),
-
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              post.title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 5),
-            Text(post.content, textAlign: TextAlign.right),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: post.imageUrl.isNotEmpty
-                  ? Image.network(
-                post.imageUrl,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(child: Text("❌ Failed to load image"));
-                },
-              )
-                  : const SizedBox(),
-            ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                _showReplyBottomSheet(context, post);
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // User info + timestamp
+              Row(
                 children: [
-                  const Icon(Icons.chat_bubble_outline, color: Colors.grey),
-                  const SizedBox(width: 5),
-                  Text(post.replies.length.toString()),
+                  CircleAvatar(backgroundImage: NetworkImage(post.userProfileImage)),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(post.username, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text("@${post.userHandle}", style: const TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(_formatTimestamp(post.timestamp), style: const TextStyle(color: Colors.grey)),
                 ],
               ),
-            )
-          ],
+              const SizedBox(height: 10),
+// Post title
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  post.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+
+              const SizedBox(height: 5),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  post.content,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+
+
+// Post image
+              if (post.imageUrl.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenImageScreen(imageUrl: post.imageUrl),
+                        ),
+                      );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        post.imageUrl,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 10),
+
+
+
+              // Replies count and action
+              Align(
+                alignment: Alignment.centerLeft,
+                child: GestureDetector(
+                  onTap: () => _showReplyBottomSheet(context, post),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const Icon(Icons.chat_bubble_outline, color: Colors.grey),
+                      const SizedBox(width: 5),
+                      Text(post.replies.length.toString()),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+
 
   void _showReplyBottomSheet(BuildContext context, Post post) {
     TextEditingController _replyController = TextEditingController();
@@ -391,16 +398,20 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Directionality(
+            textDirection: TextDirection.rtl,
+        child:  AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           title: const Text("تأكيد الحذف"),
           content: const Text("هل أنت متأكد أنك تريد حذف هذه المشاركة؟ لا يمكن التراجع."),
+
           actions: [
             TextButton(
               child: const Text("إلغاء"),
               onPressed: () {
                 Navigator.of(context).pop(); // إغلاق الدايالوج
               },
+
             ),
             TextButton(
               child: const Text("حذف", style: TextStyle(color: Colors.red)),
@@ -420,8 +431,42 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
               },
             ),
           ],
+        ),
         );
       },
+    );
+  }
+
+
+}
+class FullScreenImageScreen extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageScreen({Key? key, required this.imageUrl}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              child: Image.network(imageUrl),
+            ),
+          ),
+          // زر الرجوع
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

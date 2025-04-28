@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'add_category_screen.dart';
 import 'admin_edu_detail_screen.dart';
+import 'admin_home_screen.dart';
+import 'admin_calendar.dart';
+import 'admin_community_screen.dart';
+import 'admin_profile_page.dart';
+
 
 class AdminEduCategoryScreen extends StatefulWidget {
   const AdminEduCategoryScreen({Key? key}) : super(key: key);
@@ -36,11 +40,29 @@ class _AdminEduCategoryScreenState extends State<AdminEduCategoryScreen> {
     fetchCategories();
   }
 
+
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
-    // هنا ممكن تضيفي تنقل بين الشاشات
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCommunityScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminEduCategoryScreen()));
+        break;
+      case 2:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminHomePage()));
+        break;
+      case 3:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCalendarScreen()));
+        break;
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminProfilePage()));
+        break;
+    }
   }
 
   @override
@@ -64,24 +86,13 @@ class _AdminEduCategoryScreenState extends State<AdminEduCategoryScreen> {
           SafeArea(
             child: Column(
               children: [
-                // الصف العلوي: زر إضافة + العنوان + سهم وهمي يمين علشان التوسيط
+                // الصف العلوي: العنوان فقط بدون زر الإضافة
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // زر الإضافة
-                      IconButton(
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => AddCategoryScreen()),
-                          );
-                          fetchCategories(); // تحديث القائمة
-                        },
-                      ),
-                      const Text(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text(
                         "تعلّم",
                         style: TextStyle(
                           color: Colors.white,
@@ -89,7 +100,6 @@ class _AdminEduCategoryScreenState extends State<AdminEduCategoryScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios, color: Colors.transparent), // لحفظ التوسيط
                     ],
                   ),
                 ),
@@ -109,9 +119,7 @@ class _AdminEduCategoryScreenState extends State<AdminEduCategoryScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => AdminEduDetailScreen(
-                                    id: category['id'],
-                                  ),
+                                  builder: (_) => AdminEduDetailScreen(id: category['id']),
                                 ),
                               );
                             },
@@ -183,19 +191,22 @@ class _AdminEduCategoryScreenState extends State<AdminEduCategoryScreen> {
       ),
 
       // البار السفلي
+
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: Color(0xFF3D0066),
+        unselectedItemColor: Colors.grey,
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF7A1E6C),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "مستكشفون"),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "تعلَّم"),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "التقويم"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "معلوماتي"),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'تعلم',),
+          BottomNavigationBarItem(icon: SizedBox(height: 35,child: Image.asset('assets/barStar.png'),),label: 'الرئيسية',),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today),label: 'التقويم',),
+          BottomNavigationBarItem(icon: Icon(Icons.person),label: 'معلوماتي',),
+
+
         ],
       ),
     );

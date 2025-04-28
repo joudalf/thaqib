@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'edit_profile.dart';
-import 'login.dart';
-import 'home_page.dart';
-import 'calendar.dart';
-import 'community_screen.dart';
-import 'edu_category_screen.dart';
+import 'package:thaqib/screens/login.dart';
+import 'admin_edit_profile.dart';       // if admins can still edit their own info
+// import 'admin_dashboard.dart'; // your actual admin panel
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:thaqib/screens/login.dart';
+import 'admin_home_screen.dart';
+import 'admin_calendar.dart';
+import 'admin_community_screen.dart';
+import 'admin_edu_category_screen.dart';
 
-class ProfilePage extends StatefulWidget {
+class AdminProfilePage extends StatefulWidget {
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _AdminProfilePageState createState() => _AdminProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _AdminProfilePageState extends State<AdminProfilePage> {
   final User? user = FirebaseAuth.instance.currentUser;
   int _currentIndex = 4;
 
@@ -23,36 +27,35 @@ class _ProfilePageState extends State<ProfilePage> {
         .doc(user!.uid)
         .get();
   }
-
-  Future<void> _logout(BuildContext context) async {
+  Future<void> _logout(BuildContext ctx) async {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
-      context,
+      ctx,
       MaterialPageRoute(builder: (_) => LoginScreen()),
     );
   }
+
 
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
 
-    // Navigate to different pages based on index
     switch (index) {
       case 0:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CommunityScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCommunityScreen()));
         break;
       case 1:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EduCategoryScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminEduCategoryScreen()));
         break;
       case 2:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminHomePage()));
         break;
       case 3:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CalendarScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminCalendarScreen()));
         break;
       case 4:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminProfilePage()));
         break;
     }
   }
@@ -80,7 +83,6 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       body: Container(
-        width: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/gradient 1.png"),
@@ -92,12 +94,12 @@ class _ProfilePageState extends State<ProfilePage> {
               .collection('users')
               .doc(user!.uid)
               .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+          builder: (ctx, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
               return const Center(
                   child: CircularProgressIndicator(color: Colors.white));
             }
-            if (!snapshot.hasData || !snapshot.data!.exists) {
+            if (!snap.hasData || !snap.data!.exists) {
               return const Center(
                 child: Text(
                   'لم يتم العثور على البيانات',
@@ -105,63 +107,50 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               );
             }
-
-            final userData =
-            snapshot.data!.data() as Map<String, dynamic>;
-
+            final userData = snap.data!.data() as Map<String, dynamic>;
             return SafeArea(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 60), // space below AppBar
+                  const SizedBox(height: 60),
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: userData['imageUrl'] != null
-                        ? NetworkImage(userData['imageUrl'])
-                    as ImageProvider
+                        ? NetworkImage(userData['imageUrl']) as ImageProvider
                         : const AssetImage('assets/profile_pic.png'),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     userData['name'] ?? 'الاسم غير متوفر',
                     style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     '@${userData['username'] ?? 'اسم المستخدم'}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                    textAlign: TextAlign.center,
+                    style:
+                    const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                   const SizedBox(height: 20),
                   Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 20.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
                       userData['bio'] ?? 'لا توجد نبذة.',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
+                      style:
+                      const TextStyle(fontSize: 14, color: Colors.white),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
+
+                  // *** ADMIN BUTTON ***
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditProfileScreen(),
-                        ),
-                      );
+                      // Navigator.push(context, MaterialPageRoute(
+                      //   builder: (_) => AdminDashboardScreen()
+                      // ));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -169,7 +158,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           horizontal: 40, vertical: 12),
                     ),
                     child: const Text(
-                      'تعديل الملف الشخصي',
+                      'لوحة التحكم',
                       style: TextStyle(color: Colors.black),
                     ),
                   ),
@@ -179,7 +168,6 @@ class _ProfilePageState extends State<ProfilePage> {
           },
         ),
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
@@ -200,3 +188,4 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+

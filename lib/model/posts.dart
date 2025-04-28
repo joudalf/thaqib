@@ -35,7 +35,7 @@ class Post {
                 title: data['title'] ?? '',
                 content: data['content'] ?? '',
                 imageUrl: data['imageUrl'] ?? '',
-                userProfileImage: data['userProfileImage'] ?? '',
+                userProfileImage: data['profileImage'] ?? '',
                 username: data['username'] ?? 'مستخدم مجهول',
                 userHandle: data['userHandle'] ?? '@unknown',
                 timestamp: (data['timestamp'] as Timestamp).toDate(),
@@ -50,7 +50,7 @@ class Post {
                               'userId': '',
                               'username': 'مجهول',
                               'name': 'مجهول',
-                              'userProfileImage': '',
+                              'profileImage': '',
                             };
                         }
                 }).toList() ?? [],
@@ -64,7 +64,7 @@ class Post {
       'title': title,
       'content': content,
       'imageUrl': imageUrl,
-      'userProfileImage': userProfileImage,
+      'profileImage': userProfileImage,
       'username': username,
       'userHandle': userHandle,
      'timestamp': Timestamp.fromDate(timestamp),

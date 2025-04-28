@@ -107,13 +107,17 @@ class _AdminCategoryPostsScreenState extends State<AdminCategoryPostsScreen> {
   }
 
   Widget _buildPostCard(Post post) {
-    return Card(
-      margin: const EdgeInsets.all(12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+
+    return Directionality(
+    textDirection: TextDirection.rtl,
+    child: Card(
+    color: Colors.white,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // معلومات المستخدم + زر الحذف
             Row(
@@ -138,15 +142,33 @@ class _AdminCategoryPostsScreenState extends State<AdminCategoryPostsScreen> {
             Text(post.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             Text(post.content),
+            // Post image clickable (only once)
             if (post.imageUrl.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(post.imageUrl, height: 200, width: double.infinity, fit: BoxFit.cover),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullScreenImageScreen(imageUrl: post.imageUrl),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      post.imageUrl,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
+            const SizedBox(height: 10),
+
+            const SizedBox(height: 10),
     GestureDetector(
     onTap: () => _showReplyBottomSheet(context, post),
     child: Row(
@@ -163,34 +185,42 @@ class _AdminCategoryPostsScreenState extends State<AdminCategoryPostsScreen> {
     ],
     ),
     ),
+    ),
     );
   }
 
   void _confirmDeletePost(Post post) {
     showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("تأكيد الحذف"),
-        content: Text("هل تريد حذف هذه المشاركة؟"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("إلغاء")),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await FirebaseFirestore.instance
-                  .collection('community_categories')
-                  .doc(widget.categoryId)
-                  .collection('posts')
-                  .doc(post.id)
-                  .delete();
-              loadPosts();
-            },
-            child: Text("حذف", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+        context: context,
+        builder: (BuildContext context) {
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              title: Text("تأكيد الحذف"),
+              content: Text("هل تريد حذف هذه المشاركة؟"),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context),
+                    child: Text("إلغاء")),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await FirebaseFirestore.instance
+                        .collection('community_categories')
+                        .doc(widget.categoryId)
+                        .collection('posts')
+                        .doc(post.id)
+                        .delete();
+                    loadPosts();
+                  },
+                  child: Text("حذف", style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          );
+        }
     );
   }
+
 
   void _confirmDeleteReply(Post post, int index) {
     showDialog(
@@ -352,5 +382,37 @@ class _AdminCategoryPostsScreenState extends State<AdminCategoryPostsScreen> {
       );
     }
   }
+class FullScreenImageScreen extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageScreen({Key? key, required this.imageUrl}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              child: Image.network(imageUrl),
+            ),
+          ),
+          // زر الرجوع
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 

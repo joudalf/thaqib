@@ -1,65 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-//import 'package:thaqib/screens/allTweetsPage.dart';
+import 'package:thaqib/screens/twitter/all_tweets_page.dart';
+import 'package:thaqib/repository/twitter_repository.dart';
+import 'package:thaqib/model/tweet_with_user.dart';
+import 'package:thaqib/screens/twitter/twitter_card.dart';
+import 'package:thaqib/screens/profie_page.dart';
 import 'package:thaqib/screens/map_page.dart';
 import 'package:thaqib/screens/notifi_page.dart';
-//import 'package:thaqib/screens/twitter_service.dart';
+//import 'package:thaqib/screens/user/twitter_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:timeago/src/messages/ar_messages.dart';
-import 'package:thaqib/screens/calendar.dart';
-import 'community_screen.dart';
-import 'profie_page.dart';
-import 'edu_category_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'community_screen.dart';
+import 'edu_category_screen.dart';
+import 'calendar.dart';
+
+
+
 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 2;
-  //List<TweetWithUser> tweets = [];
+  int _selectedIndex = 2;
+  List<TweetWithUser> tweets = [];
   bool isLoading = true;
   String userName = '';
-  void _onTabTapped(int index) {
-    if (index == 3) { // If "التقويم" is clicked
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => CalendarScreen()), // ✅ Navigate to CalendarScreen
-
-      );
-    }else if (index == 0) { // 🔹 If مستكشفون is clicked, navigate to CommunityScreen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => CommunityScreen()),
-      );
-    }else if(index == 4){
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ProfilePage()),
-      );
-    }else if(index == 1){
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => EduCategoryScreen()),
-      );
-    }else {
-      setState(() {
-        _currentIndex = index; // Update the selected index
-      });
-    }
-  }
+  String userImage = '';
 
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('ar', timeago.ArMessages());
-    // fetchTweets();
+    fetchTweets();
     fetchUserName();
   }
 
@@ -68,23 +49,54 @@ class _HomeScreenState extends State<HomeScreen> {
     if (user != null) {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (doc.exists) {
+        final data = doc.data();
         setState(() {
-          userName = doc['name'] ?? 'مستخدم';
+          userName = data?['name'] ?? 'مستخدم';
+          userImage = data?['imageUrl'] ?? '';
         });
       }
     }
   }
 
-  /*Future<void> fetchTweets() async {
-    final twitterService = TwitterService();
-    final fetchedTweets = await twitterService.fetchLatestTweets(maxResults: 2);
+  Future<void> fetchTweets() async {
+    try {
+      final repository = TwitterRepository();
+      final fetchedTweets = await repository.getTweetsFromFirestore();
+      setState(() {
+        tweets = fetchedTweets;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching tweets: $e');
+    }
+  }
+
+
+
+  void _onTabTapped(int index) {
     setState(() {
-      tweets = fetchedTweets;
-      isLoading = false;
+      _selectedIndex = index;
     });
-  }*/
 
-
+    // Navigate to different pages based on index
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CommunityScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EduCategoryScreen()));
+        break;
+      case 2:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        break;
+      case 3:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CalendarScreen()));
+        break;
+      case 4:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+        break;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,27 +107,20 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => MapPageUser()));
-              },
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MapPageUser())),
               child: SizedBox(
                 width: 32,
                 height: 32,
-                child: Image.asset(
-                  'assets/globe_icon.png',
-                  fit: BoxFit.contain,
-                ),
+                child: Image.asset('assets/globe_icon.png', fit: BoxFit.contain),
               ),
             ),
             Expanded(
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  " مرحبا، $userName !",
-                  textDirection: TextDirection.rtl,
+                  "! مرحبا، $userName",
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: const TextStyle(
@@ -126,29 +131,105 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            IconButton(
+            userImage.isNotEmpty
+                ? GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage())),
+              child: CircleAvatar(backgroundImage: NetworkImage(userImage), radius: 18),
+            )
+                : IconButton(
               icon: const Icon(Icons.account_circle, color: Colors.white, size: 28),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage()));
-              },
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage())),
             ),
           ],
         ),
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              "assets/background.png",
-              fit: BoxFit.cover,
-            ),
-          ),
+          Positioned.fill(child: Image.asset("assets/background.png", fit: BoxFit.cover)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 100),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 10),
+                // إشعارات
+                Container(
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotifiPage())),
+                            child: const Text("عرض الكل", style: TextStyle(color: Colors.white)),
+                          ),
+                          const Row(
+                            children: [
+                              Icon(Icons.notifications, color: Colors.white),
+                              SizedBox(width: 5),
+                              Text("إشعاراتي", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('notifications')
+                            .orderBy('timestamp', descending: true)
+                            .limit(3)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return const Text('لا توجد إشعارات حالياً', style: TextStyle(color: Colors.white));
+                          }
+
+                          final docs = snapshot.data!.docs;
+
+                          return Column(
+                            children: docs.map((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              final timestamp = data['timestamp'] as Timestamp?;
+                              final date = timestamp?.toDate();
+                              String timeText = '';
+                              if (date != null) {
+                                final duration = DateTime.now().difference(date);
+                                if (duration.inDays <= 7) {
+                                  timeText = timeago.format(date, locale: 'ar');
+                                } else {
+                                  timeText = DateFormat('yyyy/MM/dd - HH:mm').format(date);
+                                }
+                              }
+
+                              return Container(
+                                margin: const EdgeInsets.only(top: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(data['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(timeText, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
+
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // قسم تويتر
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
@@ -162,160 +243,32 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           TextButton(
-                            onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => NotifiPage()));
-                            },
-                            child: const Text(
-                              "عرض الكل",
-                              style: TextStyle(color: Colors.white, fontSize: 14),
-                            ),
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AllTweetsPage())),
+                            child: const Text("عرض الكل", style: TextStyle(color: Colors.white)),
                           ),
-                          Row(
-                            children: const [
-                              Icon(Icons.notifications, color: Colors.white),
-                              SizedBox(width: 5),
-                              Text(
-                                "إشعاراتي",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
+                          const Text("𝕏 أهم الأخبار من منصة", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('notifications')
-                            .orderBy('timestamp', descending: true)
-                            .limit(1)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            return const Text(
-                              'لا توجد إشعارات حالياً',
-                              style: TextStyle(color: Colors.white),
-                            );
-                          }
-
-                          final doc = snapshot.data!.docs.first;
-                          final data = doc.data() as Map<String, dynamic>;
-                          final timestamp = data['timestamp'] as Timestamp?;
-                          final timeText = timestamp != null
-                              ? timeago.format(timestamp.toDate(), locale: 'ar')
-                              : 'بدون وقت';
-
-                          return Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  data['title'] ?? '',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.right,
-                                ),
-                                const SizedBox(height: 4),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    timeText,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                /* const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "أهم الأخبار من منصة 𝕏",
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
                       isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : Column(
-                        children: tweets.map((tweet) {
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(tweet.author.profileImageUrl ?? ""),
-                              radius: 20,
-                            ),
-                            title: Text(tweet.author.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                            subtitle: Text(tweet.tweet.text, style: const TextStyle(color: Colors.white)),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 10),
-                      Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const AllTweetsPage()),
-                            );
-                          },
-                          child: const Text("عرض جميع الأخبار"),
-                        ),
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: tweets.take(1).map((tweet) => TwitterCard(tweet: tweet)).toList(),
                       ),
                     ],
                   ),
                 ),
-                */
               ],
             ),
           ),
         ],
       ),
-
-      // 🔹 Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: Color(0xFF3D0066),
         unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex,
+        currentIndex:_selectedIndex,
         onTap: _onTabTapped,
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.group), label: 'مستكشفون',),

@@ -107,8 +107,31 @@ class EduDetailScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 20),
 
-                              // صورة مع ميزة التكبير
+                              // صورة رئيسية (imageUrl)
                               if (data['imageUrl'] != null && data['imageUrl'].toString().isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FullScreenImageScreen(imageUrl: data['imageUrl']),
+                                      ),
+                                    );
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      data['imageUrl'],
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+
+
+                              const SizedBox(height: 20),
+
+                              // صورة القسم الأول الثانية
+                              if (data['section1Image'] != null && data['section1Image'].toString().isNotEmpty)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: InteractiveViewer(
@@ -117,11 +140,12 @@ class EduDetailScreen extends StatelessWidget {
                                     minScale: 1,
                                     maxScale: 5,
                                     child: Image.network(
-                                      data['imageUrl'],
+                                      data['section1Image'],
                                       fit: BoxFit.cover,
                                     ),
                                   ),
                                 ),
+
                               const SizedBox(height: 20),
 
                               // القسم الثاني
@@ -143,6 +167,67 @@ class EduDetailScreen extends StatelessWidget {
                                 ),
                                 textAlign: TextAlign.right,
                               ),
+
+                              const SizedBox(height: 20),
+
+                              // صورة القسم الثاني (section2ImageUrl)
+                              if (data['section2ImageUrl'] != null &&
+                                  data['section2ImageUrl'].toString().isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: InteractiveViewer(
+                                    panEnabled: true,
+                                    boundaryMargin: const EdgeInsets.all(20),
+                                    minScale: 1,
+                                    maxScale: 5,
+                                    child: Image.network(
+                                      data['section2ImageUrl'],
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+
+                              const SizedBox(height: 20),
+
+                              // صورة القسم الثاني الثانية (section2Image)
+                              if (data['section2Image'] != null && data['section2Image'].toString().isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: InteractiveViewer(
+                                    panEnabled: true,
+                                    boundaryMargin: const EdgeInsets.all(20),
+                                    minScale: 1,
+                                    maxScale: 5,
+                                    child: Image.network(
+                                      data['section2Image'],
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+
+                              const SizedBox(height: 20),
+
+                              // القسم الثالث (اختياري)
+                              if (data['section3Title'] != null || data['section3Text'] != null) ...[
+                                Text(
+                                  data['section3Title'] ?? '',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  data['section3Text'] ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.black,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -151,6 +236,36 @@ class EduDetailScreen extends StatelessWidget {
                   ],
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class FullScreenImageScreen extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageScreen({Key? key, required this.imageUrl}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              child: Image.network(imageUrl),
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
           ),
         ],

@@ -31,7 +31,7 @@ class _CalendarScreenState extends State<CalendarScreen>{
 
       if (doc.exists) {
         setState(() {
-          calendarImageUrl = doc['image']; // Get the image URL
+          calendarImageUrl = doc['imageUrl']; // Get the image URL
         });
       }
     } catch (e) {
@@ -106,25 +106,47 @@ class _CalendarScreenState extends State<CalendarScreen>{
                 const SizedBox(height: 20),
 
                 // 🔹 Calendar Image (Fetched from Firestore)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),child: calendarImageUrl == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: InteractiveViewer(
-                    panEnabled: true,
-                    minScale: 0.8,
-                    maxScale: 4.0,
-                    child: Image.network(
-                      calendarImageUrl!,
-                      width: 700,
-                      height: MediaQuery.of(context).size.height * 0.5,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance.collection('Calendar').doc('Nov_2024').snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (!snapshot.hasData || !snapshot.data!.exists || snapshot.data!['imageUrl'] == null) {
+                      return const Center(
+                        child: Text("لا يوجد تقويم حالي", style: TextStyle(color: Colors.white)),
+                      );
+                    }
+
+                    final calendarImageUrl = snapshot.data!['imageUrl'];
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImageScreen(imageUrl: calendarImageUrl),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            calendarImageUrl,
+                            width: double.infinity,
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
+
+                  },
                 ),
 
-                ),
 
                 const SizedBox(height: 20),
 
@@ -136,11 +158,7 @@ class _CalendarScreenState extends State<CalendarScreen>{
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "تقاويم الأشهر السابقة ",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      const Icon(Icons.calendar_month, color: Colors.white),
+
                       const SizedBox(width: 5),
                     ],
                   ),
@@ -169,6 +187,36 @@ class _CalendarScreenState extends State<CalendarScreen>{
 
     ],
     ),
+    );
+  }
+}
+class FullScreenImageScreen extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageScreen({Key? key, required this.imageUrl}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              child: Image.network(imageUrl),
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
