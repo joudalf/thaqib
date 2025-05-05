@@ -10,16 +10,19 @@ import 'calendar.dart';
 class CategoryPostsScreen extends StatefulWidget {
   final String categoryId;
 
+
   const CategoryPostsScreen({Key? key, required this.categoryId}) : super(key: key);
 
   @override
   _CategoryPostsScreenState createState() => _CategoryPostsScreenState();
+
 }
 
 
 class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   List<Post> posts = [];
+
 
   @override
   void initState() {
@@ -35,6 +38,10 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
       posts = fetchedPosts;
     });
   }
+
+
+
+
 
   String _formatTimestamp(dynamic timestamp) {
     if (timestamp is Timestamp) {
@@ -55,6 +62,7 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
 
     return "غير معروف";
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +170,12 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
               // User info + timestamp
               Row(
                 children: [
-                  CircleAvatar(backgroundImage: NetworkImage(post.userProfileImage)),
+                  CircleAvatar(
+                    backgroundImage: post.userProfileImage.isNotEmpty
+                        ? NetworkImage(post.userProfileImage)
+                        : const AssetImage('assets/profile_pic.png') as ImageProvider,
+                  ),
+
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,8 +184,27 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
                       Text("@${post.userHandle}", style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
-                  const Spacer(),
-                  Text(_formatTimestamp(post.timestamp), style: const TextStyle(color: Colors.grey)),
+                  Spacer(),
+                  if (FirebaseAuth.instance.currentUser?.uid == post.userId) // 🔥 فقط لصاحب المشاركة
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'delete') {
+                          _showDeletePostDialog(post);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('حذف المشاركة'),
+                        ),
+                      ],
+                      icon: const Icon(Icons.more_vert, color: Colors.grey),
+                    ),
+                  Text(
+                    _formatTimestamp(post.timestamp),
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+
                 ],
               ),
               const SizedBox(height: 10),
@@ -287,7 +319,7 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
                           children: [
                             // صورة البروفايل
                             CircleAvatar(
-                              backgroundImage: NetworkImage(reply['userProfileImage'] ?? ''),
+                              backgroundImage: NetworkImage(reply['ImageUrl'] ?? ''),
                               radius: 20,
                             ),
                             const SizedBox(width: 10),
@@ -365,7 +397,7 @@ class _CategoryPostsScreenState extends State<CategoryPostsScreen> {
                       'userId': user.uid,
                       'username': userDoc.data()?['username'] ?? 'unknown',
                       'name': userDoc.data()?['name'] ?? 'مستخدم',
-                      'userProfileImage': userDoc.data()?['profileImageUrl'] ?? '',
+                      'ImageUrl': userDoc.data()?['ImageUrl'] ?? '',
                     };
                       post.replies.add(reply);
 

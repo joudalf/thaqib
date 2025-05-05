@@ -54,27 +54,48 @@ class _AdminMapPageState extends State<AdminMapPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إضافة رابط جديد'),
+
+
+        title: const Text(
+          'إضافة رابط جديد',
+          textAlign: TextAlign.right,
+          textDirection: TextDirection.rtl,
+        ),
+
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'عنوان الرابط'),
-                textAlign: TextAlign.right,
+
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(labelText: 'عنوان الرابط'),
+                  textAlign: TextAlign.right,
+                ),
               ),
-              TextField(
-                controller: _linkController,
-                decoration: const InputDecoration(labelText: 'رابط الخريطة'),
-                textAlign: TextAlign.right,
+
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextField(
+                  controller: _linkController,
+                  decoration: const InputDecoration(labelText: 'رابط الخريطة'),
+                  textAlign: TextAlign.right,
+                ),
               ),
-              TextField(
-                controller: _descController,
-                decoration: const InputDecoration(labelText: 'الوصف'),
-                textAlign: TextAlign.right,
-                maxLines: 3,
+
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextField(
+                  controller: _descController,
+                  decoration: const InputDecoration(labelText: 'الوصف'),
+                  textAlign: TextAlign.right,
+                  maxLines: 3,
+                ),
               ),
+
+
             ],
           ),
         ),
@@ -136,6 +157,8 @@ class _AdminMapPageState extends State<AdminMapPage> {
                   child: Text(
                     'لا توجد روابط حالياً',
                     style: TextStyle(color: Colors.white),
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
                   ),
                 );
               }
@@ -172,23 +195,25 @@ class _AdminMapPageState extends State<AdminMapPage> {
                                 children: [
                                   Text(
                                     data['title'] ?? '',
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       decoration: TextDecoration.underline,
                                       fontSize: 16,
                                     ),
-                                    textAlign: TextAlign.right,
                                   ),
                                   const SizedBox(height: 4),
                                   if (data['description'] != null && data['description'].toString().isNotEmpty)
                                     Text(
                                       data['description'],
+                                      textAlign: TextAlign.right,
+                                      textDirection: TextDirection.rtl,
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 14,
                                       ),
-                                      textAlign: TextAlign.right,
                                     ),
                                 ],
                               ),

@@ -90,14 +90,26 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "إضافة تصنيف جديد",
-                    style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                  // 🔹 عنوان إضافة تصنيف
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "إضافة تصنيف جديد",
+                      style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                      textDirection: TextDirection.rtl,
+                    ),
                   ),
                   const SizedBox(height: 20),
 
-                  // 🔹 Title
-                  const Text("عنوان التصنيف", style: TextStyle(color: Colors.white)),
+// 🔹 عنوان حقل عنوان التصنيف
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "عنوان التصنيف",
+                      style: TextStyle(color: Colors.white),
+                      textDirection: TextDirection.rtl,
+                    ),
+                  ),
                   TextField(
                     controller: _titleController,
                     textDirection: TextDirection.rtl,
@@ -108,13 +120,24 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                       hintStyle: TextStyle(color: Colors.grey[300]),
                       filled: true,
                       fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
 
-                  // 🔹 Image Picker
-                  const Text("صورة التصنيف", style: TextStyle(color: Colors.white)),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "صورة التصنيف",
+                      style: TextStyle(color: Colors.white),
+                      textDirection: TextDirection.rtl,
+                    ),
+                  ),
+
                   GestureDetector(
                     onTap: pickImage,
                     child: Container(

@@ -187,10 +187,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                   ),*/
                   const SizedBox(height: 10),
-                  const Text(
-                    "إضافة مشاركة",
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "إضافة مشاركة",
                     style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                   ),
+                  ),
+
                   const SizedBox(height: 20),
 
                   // 🔹 Title Field

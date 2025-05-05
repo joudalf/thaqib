@@ -1,112 +1,60 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+
 
 class AdminEditProfileScreen extends StatefulWidget {
-  final String userId; // ← admin passes the user ID
-
-  AdminEditProfileScreen({required this.userId});
-
   @override
   _AdminEditProfileScreenState createState() => _AdminEditProfileScreenState();
 }
 
 class _AdminEditProfileScreenState extends State<AdminEditProfileScreen> {
-  final _nameController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _bioController = TextEditingController();
+  final _nameController = TextEditingController(text: 'Admin');
+  final _usernameController = TextEditingController(text: 'Admin1');
+  final _bioController = TextEditingController(text: 'This is the admin profile');
   File? _imageFile;
-  String? existingImageUrl;
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
-    final data = doc.data();
-    if (data != null) {
-      _nameController.text = data['name'] ?? '';
-      _usernameController.text = data['username'] ?? '';
-      _bioController.text = data['bio'] ?? '';
-      existingImageUrl = data['imageUrl'];
-    }
-    setState(() {
-      isLoading = false;
-    });
-  }
+  String? existingImageUrl = 'assets/profile_pic.png'; // Static profile image
+  bool isLoading = false;
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
       final file = File(picked.path);
+
       if (await file.exists()) {
         setState(() => _imageFile = file);
+        print("✅ Picked image path: ${file.path}");
+      } else {
+        print("🚫 File does not exist: ${file.path}");
       }
+    } else {
+      print("⚠️ No image selected");
     }
   }
 
   Future<void> _saveProfile() async {
-    final uid = widget.userId;
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       String imageUrl = existingImageUrl ?? '';
       if (_imageFile != null) {
-        final uploadedUrl = await uploadImageToImgur(_imageFile!);
-        if (uploadedUrl != null) {
-          imageUrl = uploadedUrl;
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ فشل تحميل الصورة')));
-          return;
-        }
+        // Here you could upload the image, but for admin, we use static data
+        imageUrl = 'path_to_uploaded_image'; // Placeholder for image upload logic
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'name': _nameController.text.trim(),
-        'username': _usernameController.text.trim(),
-        'bio': _bioController.text.trim(),
-        'imageUrl': imageUrl,
-      });
-
+      // Here you would save to Firestore or similar, but for admin, we will just show a success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ تم حفظ تعديلات الملف الشخصي')),
+        SnackBar(content: Text('✅ تم حفظ الملف الشخصي بنجاح')),
       );
       Navigator.pop(context);
     } catch (e) {
       print('❌ Error in _saveProfile: $e');
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ حدث خطأ أثناء حفظ التعديلات')),
+        SnackBar(content: Text('❌ حدث خطأ أثناء حفظ الملف')),
       );
-    }
-  }
-
-  Future<String?> uploadImageToImgur(File imageFile) async {
-    final clientId = 'd77955fcb453ad9'; // Your Imgur Client ID
-    final bytes = await imageFile.readAsBytes();
-    final base64Image = base64Encode(bytes);
-
-    final response = await http.post(
-      Uri.parse('https://api.imgur.com/3/image'),
-      headers: {
-        'Authorization': 'Client-ID $clientId',
-      },
-      body: {
-        'image': base64Image,
-        'type': 'base64',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['data']['link'];
-    } else {
-      print('❌ Imgur upload error: ${response.body}');
-      return null;
     }
   }
 
@@ -136,7 +84,7 @@ class _AdminEditProfileScreenState extends State<AdminEditProfileScreen> {
                   ),
                 ),
                 Text(
-                  'تعديل ملف المستخدم',
+                  'تعديل الملف الشخصي',
                   style: TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.right,
                 ),
@@ -155,7 +103,7 @@ class _AdminEditProfileScreenState extends State<AdminEditProfileScreen> {
                       backgroundImage: _imageFile != null
                           ? FileImage(_imageFile!)
                           : (existingImageUrl != null && existingImageUrl!.isNotEmpty)
-                          ? NetworkImage(existingImageUrl!)
+                          ? AssetImage(existingImageUrl!) as ImageProvider
                           : AssetImage('assets/profile_pic.png') as ImageProvider,
                     ),
                   ),
@@ -167,6 +115,20 @@ class _AdminEditProfileScreenState extends State<AdminEditProfileScreen> {
                 _buildField('اسم المستخدم', _usernameController),
                 _buildField('نبذة تعريفية', _bioController),
                 SizedBox(height: 30),
+
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'اعدادات الحساب',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+
+                    ],
+                  ),
+                ),
 
                 ElevatedButton(
                   onPressed: _saveProfile,
